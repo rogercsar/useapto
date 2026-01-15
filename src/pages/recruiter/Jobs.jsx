@@ -69,6 +69,9 @@ const Jobs = () => {
                                     >
                                         <option value="tech">Tech & Dev</option>
                                         <option value="sales">Vendas & CS</option>
+                                        <option value="finance">Finanças & Contabilidade</option>
+                                        <option value="legal">Jurídico</option>
+                                        <option value="admin">Administrativo / Operacional</option>
                                         <option value="marketing">Marketing Digital</option>
                                         <option value="product">Gestão de Produto</option>
                                         <option value="hr">Recursos Humanos</option>

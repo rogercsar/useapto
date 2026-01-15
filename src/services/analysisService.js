@@ -1,6 +1,7 @@
 const CATEGORY_KEYWORDS = {
-    'finance': ['excel', 'vba', 'conciliação', 'sap', 'contas a pagar', 'contas a receber', 'tesouraria', 'fluxo de caixa', 'dre', 'balanço', 'fiscal', 'tributário', 'auditoria'],
-    'admin': ['organização', 'arquivo', 'atendimento', 'agenda', 'pacote office', 'redação', 'email', 'telefone', 'recepção', 'documentos', 'planilhas', 'administrativo'],
+    'finance': ['contabilidade', 'fiscal', 'tributário', 'dre', 'fluxo de caixa', 'conciliação', 'balanço', 'auditoria', 'tax', 'ifrs', 'cpc', 'excel', 'vba', 'sap', 'contas a pagar', 'contas a receber', 'bancário', 'investimentos', 'tesouraria'],
+    'admin': ['rotinas administrativas', 'compras', 'estoque', 'facilities', 'arquivo', 'recepção', 'secretariado', 'viagens', 'pagamentos', 'fornecedores', 'organização', 'atendimento', 'agenda', 'pacote office', 'redação', 'email', 'telefone', 'documentos', 'planilhas', 'gestão de materiais'],
+    'legal': ['direito', 'oab', 'contratos', 'civil', 'trabalhista', 'contencioso', 'petição', 'jurídico', 'legal', 'compliance', 'lgpd', 'audiência', 'processual', 'societário', 'marcas e patentes'],
     'tech': ['javascript', 'react', 'node', 'python', 'sql', 'aws', 'docker', 'git', 'agile', 'scrum', 'api', 'devops', 'banco de dados'],
     'sales': ['prospecção', 'vendas', 'negociação', 'crm', 'funil', 'cold call', 'b2b', 'b2c', 'metas', 'pós-venda', 'cliente', 'apresentação'],
     'hr': ['recrutamento', 'seleção', 'dp', 'departamento pessoal', 'benefícios', 'admissão', 'treinamento', 'cultura', 'onboarding', 'folha de pagamento']
