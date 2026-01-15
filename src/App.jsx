@@ -7,13 +7,14 @@ import RecruiterLayout from './layouts/RecruiterLayout';
 import Dashboard from './pages/recruiter/Dashboard';
 import Jobs from './pages/recruiter/Jobs';
 import Candidates from './pages/recruiter/Candidates';
-import Ranking from './pages/recruiter/Ranking';
 import Compare from './pages/recruiter/Compare';
 import Reports from './pages/recruiter/Reports';
 import Profile from './pages/recruiter/Profile';
 import JobDetails from './pages/recruiter/JobDetails';
 import CandidateDetails from './pages/recruiter/CandidateDetails';
 import Interview from './pages/candidate/Interview';
+import PublicJobs from './pages/public/PublicJobs';
+import PublicJobApply from './pages/public/PublicJobApply';
 
 import { RecruiterProvider } from './contexts/RecruiterContext';
 import { LanguageProvider } from './contexts/LanguageContext';
@@ -28,6 +29,10 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/interview/:candidateId" element={<Interview />} />
 
+          {/* Public Job Board */}
+          <Route path="/jobs" element={<PublicJobs />} />
+          <Route path="/jobs/:id/apply" element={<PublicJobApply />} />
+
           <Route path="/recruiter" element={<RecruiterLayout />}>
             <Route index element={<Navigate to="dashboard" replace />} />
             <Route path="dashboard" element={<Dashboard />} />
@@ -35,7 +40,6 @@ function App() {
             <Route path="vagas/:id" element={<JobDetails />} />
             <Route path="candidatos" element={<Candidates />} />
             <Route path="candidatos/:id" element={<CandidateDetails />} />
-            <Route path="ranking" element={<Ranking />} />
             <Route path="comparar" element={<Compare />} />
             <Route path="relatorios" element={<Reports />} />
             <Route path="perfil" element={<Profile />} />

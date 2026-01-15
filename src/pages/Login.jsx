@@ -1,8 +1,16 @@
 import React from 'react';
 import { ArrowRight, Mail, Lock } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 const Login = () => {
+    const navigate = useNavigate();
+
+    const handleLogin = (e) => {
+        e.preventDefault();
+        // In a real app we would validate credentials here
+        navigate('/recruiter/dashboard');
+    };
+
     return (
         <div className="min-h-screen bg-slate-100 flex items-center justify-center p-4 w-full">
             <div className="bg-white w-full max-w-md p-10 rounded-[2rem] shadow-2xl border border-slate-100 relative overflow-hidden">
@@ -17,12 +25,12 @@ const Login = () => {
                     <h2 className="text-3xl font-bold text-slate-900 mb-2">Bem-vindo de volta</h2>
                     <p className="text-slate-500 text-sm">Seus dados estão seguros no DB Local.</p>
                 </div>
-                <form className="space-y-5" onSubmit={(e) => e.preventDefault()}>
+                <form className="space-y-5" onSubmit={handleLogin}>
                     <div>
                         <label className="block text-xs font-bold text-slate-700 uppercase mb-1 tracking-wider ml-1">E-mail</label>
                         <div className="relative">
                             <Mail className="absolute left-4 top-3.5 text-slate-400" size={20} />
-                            <input className="w-full pl-12 p-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none text-slate-900 transition-all" placeholder="nome@exemplo.com" type="email" />
+                            <input className="w-full pl-12 p-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none text-slate-900 transition-all" placeholder="nome@exemplo.com" type="email" autoFocus />
                         </div>
                     </div>
                     <div>
@@ -32,9 +40,9 @@ const Login = () => {
                             <input className="w-full pl-12 p-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none text-slate-900 transition-all" placeholder="••••••••" type="password" />
                         </div>
                     </div>
-                    <Link to="/recruiter/dashboard" className="w-full py-4 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition shadow-lg hover:shadow-xl hover:-translate-y-0.5 disabled:opacity-70 disabled:translate-y-0 disabled:shadow-none mt-2 flex items-center justify-center">
+                    <button type="submit" className="w-full py-4 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition shadow-lg hover:shadow-xl hover:-translate-y-0.5 disabled:opacity-70 disabled:translate-y-0 disabled:shadow-none mt-2 flex items-center justify-center cursor-pointer">
                         Entrar na Plataforma
-                    </Link>
+                    </button>
                 </form>
                 <div className="mt-8 text-center pt-6 border-t border-slate-100">
                     <Link to="/register" className="text-sm text-indigo-600 font-bold hover:text-indigo-800 transition hover:underline">Não tem uma conta? Cadastre-se</Link>

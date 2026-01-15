@@ -126,7 +126,6 @@ export const translations = {
                 study: { title: "Smart Study Plans", desc: "Receive curated content recommendations to fill your knowledge gaps." }
             },
             company: {
-                ranking: { title: "Automatic Ranking (AI)", desc: "Identify top talent instantly with our scoring AI." },
                 search: { title: "Talent Search", desc: "Find passive and active candidates with advanced filters and boolean search." },
                 fit: { title: "Cultural Fit", desc: "Assess candidate alignment with your company values." },
                 tests: { title: "Technical Tests", desc: "Send coding challenges and receive detailed performance reports." },

@@ -6,6 +6,7 @@ const RecruiterContext = createContext();
 export const RecruiterProvider = ({ children }) => {
     const [recruiterProfile, setRecruiterProfile] = useState(null);
     const [candidates, setCandidates] = useState([]);
+    const [jobs, setJobs] = useState([]);
     const [loading, setLoading] = useState(true);
 
     const defaultProfile = {
@@ -27,7 +28,6 @@ export const RecruiterProvider = ({ children }) => {
         score: '9%',
         strengths: ['Comunicação', 'Proatividade'],
         gaps: ['Inglês Avançado', 'Power BI'],
-        gaps: ['Inglês Avançado', 'Power BI'],
         cvText: 'RESUMO PROFISSIONAL\nProfissional com 5 anos de experiência em RH, focado em R&S e DP. \n\nEXPERIÊNCIA\n- Auxiliar de RH | Empresa X (2020-Atual)\n- Assistente Administrativo | Empresa Y (2018-2020)\n\nFORMAÇÃO\n- Gestão de Recursos Humanos | UNIC (2019)',
         interview: {
             status: 'pending', // pending, completed
@@ -37,6 +37,16 @@ export const RecruiterProvider = ({ children }) => {
         }
     }];
 
+    const defaultJobs = [
+        {
+            id: 1,
+            title: "Auxiliar de RH",
+            area: "hr",
+            description: "Apoiar no processo de recrutamento e seleção para diferentes áreas do shopping...",
+            createdAt: new Date().toISOString()
+        }
+    ];
+
     // BroadcastChannel for cross-tab synchronization
     const syncChannel = new BroadcastChannel('apto_sync');
 
@@ -45,6 +55,7 @@ export const RecruiterProvider = ({ children }) => {
             try {
                 const profile = await getData(STORES_ENUM.PROFILE);
                 const savedCandidates = await getData(STORES_ENUM.CANDIDATES);
+                const savedJobs = await getData(STORES_ENUM.JOBS);
 
                 if (profile) {
                     setRecruiterProfile(profile);
@@ -54,15 +65,33 @@ export const RecruiterProvider = ({ children }) => {
                 }
 
                 if (savedCandidates && savedCandidates.length > 0) {
-                    setCandidates(savedCandidates);
+                    // SANITIZATION: Ensure all candidates have IDs to prevent crashes
+                    const sanitizedCandidates = savedCandidates.map((c, index) => ({
+                        ...c,
+                        id: c.id || Date.now() + index // Ensure ID exists
+                    }));
+                    setCandidates(sanitizedCandidates);
+
+                    // If we found candidates without IDs, save the fixed version immediately
+                    if (JSON.stringify(sanitizedCandidates) !== JSON.stringify(savedCandidates)) {
+                        await saveData(STORES_ENUM.CANDIDATES, sanitizedCandidates);
+                    }
                 } else {
                     setCandidates(defaultCandidates);
                     await saveData(STORES_ENUM.CANDIDATES, defaultCandidates);
+                }
+
+                if (savedJobs && savedJobs.length > 0) {
+                    setJobs(savedJobs);
+                } else {
+                    setJobs(defaultJobs);
+                    await saveData(STORES_ENUM.JOBS, defaultJobs);
                 }
             } catch (error) {
                 console.error("Failed to load data from DB", error);
                 setRecruiterProfile(defaultProfile);
                 setCandidates(defaultCandidates);
+                setJobs(defaultJobs);
             } finally {
                 setLoading(false);
             }
@@ -76,6 +105,10 @@ export const RecruiterProvider = ({ children }) => {
                 console.log("Received sync event in this tab, reloading candidates...");
                 getData(STORES_ENUM.CANDIDATES).then(saved => {
                     if (saved) setCandidates(saved);
+                });
+            } else if (event.data === 'update_jobs') {
+                getData(STORES_ENUM.JOBS).then(saved => {
+                    if (saved) setJobs(saved);
                 });
             }
         };
@@ -115,12 +148,29 @@ export const RecruiterProvider = ({ children }) => {
         await saveData(STORES_ENUM.CANDIDATES, updatedCandidates);
     };
 
+    const addJob = async (newJob) => {
+        const jobWithId = { ...newJob, id: Date.now(), createdAt: new Date().toISOString() };
+        const updatedJobs = [jobWithId, ...jobs];
+        setJobs(updatedJobs);
+        await saveData(STORES_ENUM.JOBS, updatedJobs);
+        syncChannel.postMessage('update_jobs');
+        return jobWithId;
+    };
+
     if (loading) {
         return <div className="min-h-screen flex items-center justify-center">Carregando dados...</div>;
     }
 
     return (
-        <RecruiterContext.Provider value={{ recruiterProfile, updateProfile, candidates, updateCandidate, setCandidates: setCandidatesAndSave }}>
+        <RecruiterContext.Provider value={{
+            recruiterProfile,
+            updateProfile,
+            candidates,
+            updateCandidate,
+            setCandidates: setCandidatesAndSave,
+            jobs,
+            addJob
+        }}>
             {children}
         </RecruiterContext.Provider>
     );

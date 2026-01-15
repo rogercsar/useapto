@@ -11,7 +11,7 @@ const CandidateDetails = () => {
 
     // Use candidate from Context as primary source (for updates), fall back to location state or default
     // We try to find by ID first
-    const contextCandidate = candidates.find(c => c.id.toString() === id || c.id === Number(id));
+    const contextCandidate = candidates.find(c => c.id?.toString() === id || c.id === Number(id));
 
     // Fallback data if no state is passed
     const defaultCandidate = {

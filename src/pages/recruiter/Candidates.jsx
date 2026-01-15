@@ -14,9 +14,21 @@ const Candidates = () => {
     const [interviewModalOpen, setInterviewModalOpen] = useState(false);
     const [copied, setCopied] = useState(false);
     const [isAnalyzing, setIsAnalyzing] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [jobFilter, setJobFilter] = useState('all');
+    const [statusFilter, setStatusFilter] = useState('all');
 
     // Use candidates from context for persistence
     const { recruiterProfile, candidates, updateCandidate } = useRecruiter();
+
+    // removing lines
+
+    const filteredCandidates = candidates.filter(c => {
+        const matchesSearch = c.name.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesJob = jobFilter === 'all' || c.job === jobFilter;
+        const matchesStatus = statusFilter === 'all' || (c.status || 'applied') === statusFilter;
+        return matchesSearch && matchesJob && matchesStatus;
+    });
 
     // We'll focus on the first candidate for this demo since we don't have full routing for multiple yet
     const candidateData = candidates.find(c => c.id === 1) || candidates[0];
@@ -25,6 +37,7 @@ const Candidates = () => {
 
     const [tempCvText, setTempCvText] = useState('');
     const [editFormData, setEditFormData] = useState({});
+
 
     const toggleActions = (id) => {
         if (activeActionId === id) {
@@ -212,16 +225,44 @@ const Candidates = () => {
                     <label className="block text-xs font-bold text-slate-500 mb-1">Buscar por Nome</label>
                     <div className="relative">
                         <Search className="absolute left-3 top-3 text-slate-400" size={16} />
-                        <input className="w-full pl-10 p-2.5 bg-slate-50 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Ex: Rogério Silva" defaultValue="" />
+                        <input
+                            className="w-full pl-10 p-2.5 bg-slate-50 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+                            placeholder="Ex: Rogério Silva"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
                     </div>
                 </div>
-                <div className="w-full md:w-64">
+                <div className="w-full md:w-48">
                     <label className="block text-xs font-bold text-slate-500 mb-1">Filtrar por Vaga</label>
                     <div className="relative">
                         <Funnel className="absolute left-3 top-3 text-slate-400" size={16} />
-                        <select defaultValue="all" className="w-full pl-10 p-2.5 bg-slate-50 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500 appearance-none">
+                        <select
+                            value={jobFilter}
+                            onChange={(e) => setJobFilter(e.target.value)}
+                            className="w-full pl-10 p-2.5 bg-slate-50 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500 appearance-none"
+                        >
                             <option value="all">Todas as Vagas</option>
-                            <option value="1">Auxiliar de RH</option>
+                            {[...new Set(candidates.map(c => c.job))].map(jobTitle => (
+                                <option key={jobTitle} value={jobTitle}>{jobTitle}</option>
+                            ))}
+                        </select>
+                    </div>
+                </div>
+                <div className="w-full md:w-48">
+                    <label className="block text-xs font-bold text-slate-500 mb-1">Status</label>
+                    <div className="relative">
+                        <select
+                            value={statusFilter}
+                            onChange={(e) => setStatusFilter(e.target.value)}
+                            className="w-full p-2.5 bg-slate-50 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+                        >
+                            <option value="all">Todos</option>
+                            <option value="applied">Novo / Aplicou</option>
+                            <option value="interview">Entrevista</option>
+                            <option value="documents">Docs Pendentes</option>
+                            <option value="hired">Contratado</option>
+                            <option value="rejected">Rejeitado</option>
                         </select>
                     </div>
                 </div>
@@ -236,11 +277,18 @@ const Candidates = () => {
                                 <th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Candidato</th>
                                 <th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Vaga Aplicada</th>
                                 <th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">Score</th>
+                                <th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>
                                 <th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Ações</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
-                            {candidates.map(candidate => (
+                            {filteredCandidates.length === 0 && (
+                                <tr>
+                                    <td colSpan="5" className="p-8 text-center text-slate-500">Nenhum candidato encontrado.</td>
+                                </tr>
+                            )}
+
+                            {filteredCandidates.map(candidate => (
                                 <tr key={candidate.id} className="hover:bg-slate-50 transition group">
                                     <td className="p-4">
                                         <div className="font-bold text-slate-800">{candidate.name}</div>
@@ -252,6 +300,20 @@ const Candidates = () => {
                                     <td className="p-4 text-center">
                                         <span className={`px-2 py-1 rounded-lg font-bold text-sm ${parseInt(candidate.score) > 70 ? 'bg-green-100 text-green-700' : parseInt(candidate.score) > 40 ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'}`}>
                                             {candidate.score}
+                                        </span>
+                                    </td>
+                                    <td className="p-4">
+                                        <span className={`px-2 py-1 rounded-lg text-xs font-bold uppercase tracking-wide ${candidate.status === 'hired' ? 'bg-green-100 text-green-700' :
+                                            candidate.status === 'interview' ? 'bg-indigo-100 text-indigo-700' :
+                                                candidate.status === 'rejected' ? 'bg-red-100 text-red-700' :
+                                                    candidate.status === 'documents' ? 'bg-yellow-100 text-yellow-700' :
+                                                        'bg-slate-100 text-slate-700'
+                                            }`}>
+                                            {candidate.status === 'hired' ? 'Contratado' :
+                                                candidate.status === 'interview' ? 'Entrevista' :
+                                                    candidate.status === 'rejected' ? 'Rejeitado' :
+                                                        candidate.status === 'documents' ? 'Docs Pendentes' :
+                                                            'Novo / Aplicou'}
                                         </span>
                                     </td>
                                     <td className="p-4 text-right relative">

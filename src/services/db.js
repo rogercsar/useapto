@@ -1,8 +1,9 @@
 const DB_NAME = 'useapto-db';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const STORES = {
     PROFILE: 'recruiterProfile',
-    CANDIDATES: 'candidates'
+    CANDIDATES: 'candidates',
+    JOBS: 'jobs'
 };
 
 export const initDB = () => {
@@ -26,6 +27,9 @@ export const initDB = () => {
             }
             if (!db.objectStoreNames.contains(STORES.CANDIDATES)) {
                 db.createObjectStore(STORES.CANDIDATES);
+            }
+            if (!db.objectStoreNames.contains(STORES.JOBS)) {
+                db.createObjectStore(STORES.JOBS);
             }
         };
     });

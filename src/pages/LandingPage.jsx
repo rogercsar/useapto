@@ -18,6 +18,7 @@ const LandingPage = () => {
                         <div className="hidden md:flex items-center gap-8">
                             <a href="#features" className="font-semibold text-sm text-slate-600 hover:text-indigo-600 transition-colors uppercase tracking-wide">{t('nav.features')}</a>
                             <a href="#plans" className="font-semibold text-sm text-slate-600 hover:text-indigo-600 transition-colors uppercase tracking-wide">{t('nav.plans')}</a>
+                            <Link to="/jobs" className="font-semibold text-sm text-slate-600 hover:text-indigo-600 transition-colors uppercase tracking-wide">Vagas</Link>
                             <a href="#about" className="font-semibold text-sm text-slate-600 hover:text-indigo-600 transition-colors uppercase tracking-wide">{t('nav.about')}</a>
                         </div>
                         <div className="hidden md:flex items-center gap-4">

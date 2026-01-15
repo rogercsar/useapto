@@ -18,7 +18,7 @@ const RecruiterLayout = () => {
         { path: '/recruiter/dashboard', label: 'Dashboard', icon: LayoutDashboard },
         { path: '/recruiter/vagas', label: 'Vagas', icon: Briefcase },
         { path: '/recruiter/candidatos', label: 'Candidatos', icon: Users },
-        { path: '/recruiter/ranking', label: 'Ranking Geral', icon: Trophy },
+        // removing Line
         { path: '/recruiter/comparar', label: 'Comparador', icon: Columns2 },
         { path: '/recruiter/relatorios', label: 'Relatórios', icon: ChartPie },
         { path: '/recruiter/perfil', label: 'Perfil', icon: CircleUser },
@@ -47,7 +47,7 @@ const RecruiterLayout = () => {
 
             {/* Sidebar */}
             <div className={`
-                fixed md:static inset-y-0 left-0 z-50 w-64 bg-slate-900 text-white flex flex-col h-screen transition-transform duration-300 transform 
+                fixed md:sticky md:top-0 inset-y-0 left-0 z-50 w-64 bg-slate-900 text-white flex flex-col h-screen transition-transform duration-300 transform 
                 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} 
                 md:translate-x-0 shadow-2xl md:shadow-none
             `}>
