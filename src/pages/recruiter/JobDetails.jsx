@@ -12,7 +12,7 @@ import jsPDF from 'jspdf';
 const JobDetails = () => {
     const { id } = useParams();
     const navigate = useNavigate();
-    const { jobs, candidates, updateCandidate, recruiterProfile } = useRecruiter();
+    const { jobs, candidates, updateCandidate, deleteCandidate, recruiterProfile } = useRecruiter();
 
     // Local State for Actions/Modals
     const [activeActionId, setActiveActionId] = useState(null);
@@ -184,6 +184,13 @@ const JobDetails = () => {
         const subject = `Convite para Entrevista - ${selectedCandidate.job}`;
         const body = `Olá ${selectedCandidate.name},\n\nGostaríamos de convidá-lo para uma entrevista simulada com nossa IA.\nLink: ${link}`;
         window.location.href = `mailto:${selectedCandidate.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    };
+
+    const handleDelete = async () => {
+        if (!selectedCandidate) return;
+        await deleteCandidate(selectedCandidate.id);
+        setDeleteModalOpen(false);
+        setSelectedCandidate(null);
     };
 
     // --- Helpers ---
@@ -559,7 +566,7 @@ const JobDetails = () => {
                             <p className="text-slate-500 text-sm mb-6">Esta ação não pode ser desfeita.</p>
                             <div className="flex gap-3">
                                 <button onClick={() => setDeleteModalOpen(false)} className="flex-1 py-2.5 bg-slate-100 text-slate-700 font-bold rounded-xl hover:bg-slate-200 transition">Cancelar</button>
-                                <button onClick={() => setDeleteModalOpen(false)} className="flex-1 py-2.5 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 transition">Sim, Excluir</button>
+                                <button onClick={handleDelete} className="flex-1 py-2.5 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 transition">Sim, Excluir</button>
                             </div>
                         </div>
                     </div>

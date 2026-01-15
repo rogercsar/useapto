@@ -148,6 +148,13 @@ export const RecruiterProvider = ({ children }) => {
         await saveData(STORES_ENUM.CANDIDATES, updatedCandidates);
     };
 
+    const deleteCandidate = async (id) => {
+        const updatedCandidates = candidates.filter(c => c.id !== id);
+        setCandidates(updatedCandidates);
+        await saveData(STORES_ENUM.CANDIDATES, updatedCandidates);
+        syncChannel.postMessage('update_candidates');
+    };
+
     const addJob = async (newJob) => {
         const jobWithId = { ...newJob, id: Date.now(), createdAt: new Date().toISOString() };
         const updatedJobs = [jobWithId, ...jobs];
@@ -169,7 +176,8 @@ export const RecruiterProvider = ({ children }) => {
             updateCandidate,
             setCandidates: setCandidatesAndSave,
             jobs,
-            addJob
+            addJob,
+            deleteCandidate
         }}>
             {children}
         </RecruiterContext.Provider>
