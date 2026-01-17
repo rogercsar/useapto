@@ -8,6 +8,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useRecruiter } from '../../contexts/RecruiterContext';
 import { analyzeCandidate } from '../../services/analysisService';
 import jsPDF from 'jspdf';
+import CandidateComparator from '../../components/recruiter/CandidateComparator';
 
 const JobDetails = () => {
     const { id } = useParams();
@@ -106,9 +107,14 @@ const JobDetails = () => {
         try {
             const result = await analyzeCandidate({ ...selectedCandidate }, jobDescription);
             updateCandidate(selectedCandidate.id, {
-                score: `${result.score}%`,
+                score: result.score,
                 strengths: result.strengths,
-                gaps: result.gaps
+                gaps: result.gaps,
+                seniority: result.seniority,
+                suggestedRole: result.suggestedRole,
+                observation: result.observation,
+                recommendations: result.recommendations,
+                analyzedAt: result.analyzedAt
             });
         } catch (error) {
             console.error("Analysis failed", error);
@@ -168,6 +174,9 @@ const JobDetails = () => {
     const handleCopyLink = () => {
         navigator.clipboard.writeText(getInterviewLink());
         setCopied(true);
+        if (selectedCandidate) {
+            handleStatusChange(selectedCandidate.id, 'interview_released');
+        }
         setTimeout(() => setCopied(false), 2000);
     };
 
@@ -175,6 +184,7 @@ const JobDetails = () => {
         if (!selectedCandidate) return;
         const link = getInterviewLink();
         const message = `Olá ${selectedCandidate.name}, gostaríamos de convidá-lo para uma entrevista simulada com nossa IA para a vaga de ${selectedCandidate.job}. Acesse o link: ${link}`;
+        handleStatusChange(selectedCandidate.id, 'interview_released');
         window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`, '_blank');
     };
 
@@ -183,6 +193,7 @@ const JobDetails = () => {
         const link = getInterviewLink();
         const subject = `Convite para Entrevista - ${selectedCandidate.job}`;
         const body = `Olá ${selectedCandidate.name},\n\nGostaríamos de convidá-lo para uma entrevista simulada com nossa IA.\nLink: ${link}`;
+        handleStatusChange(selectedCandidate.id, 'interview_released');
         window.location.href = `mailto:${selectedCandidate.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     };
 
@@ -199,6 +210,8 @@ const JobDetails = () => {
         switch (status) {
             case 'hired': return 'bg-green-100 text-green-700';
             case 'interview': return 'bg-indigo-100 text-indigo-700';
+            case 'interview_released': return 'bg-purple-100 text-purple-700';
+            case 'interview_completed': return 'bg-emerald-100 text-emerald-700';
             case 'rejected': return 'bg-red-100 text-red-700';
             case 'documents': return 'bg-yellow-100 text-yellow-700';
             default: return 'bg-slate-100 text-slate-700';
@@ -209,6 +222,8 @@ const JobDetails = () => {
         switch (status) {
             case 'hired': return 'Contratado';
             case 'interview': return 'Entrevista';
+            case 'interview_released': return 'Entrevista IA Liberada';
+            case 'interview_completed': return 'Entrevista IA Finalizada';
             case 'rejected': return 'Rejeitado';
             case 'documents': return 'Docs Pendentes';
             default: return 'Novo / Aplicou';
@@ -304,6 +319,8 @@ const JobDetails = () => {
                                                 >
                                                     <option value="applied">{getStatusLabel('applied')}</option>
                                                     <option value="interview">{getStatusLabel('interview')}</option>
+                                                    <option value="interview_released">{getStatusLabel('interview_released')}</option>
+                                                    <option value="interview_completed">{getStatusLabel('interview_completed')}</option>
                                                     <option value="documents">{getStatusLabel('documents')}</option>
                                                     <option value="hired">{getStatusLabel('hired')}</option>
                                                     <option value="rejected">{getStatusLabel('rejected')}</option>
@@ -371,6 +388,10 @@ const JobDetails = () => {
                         </table>
                     </div>
                 </div>
+
+                {jobCandidates.length > 0 && (
+                    <CandidateComparator candidates={jobCandidates} />
+                )}
             </div>
 
             {/* --- MODALS --- */}

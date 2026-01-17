@@ -3,7 +3,30 @@ import { TrendingUp, Calendar, Share2, Printer, Award, Users, Target } from 'luc
 import { useRecruiter } from '../../contexts/RecruiterContext';
 
 const Reports = () => {
-    const { candidates } = useRecruiter();
+    const { candidates, recruiterProfile } = useRecruiter();
+
+    const handlePrint = () => {
+        window.print();
+    };
+
+    const handleShare = async () => {
+        const shareData = {
+            title: 'Relatório de Performance - UseApto',
+            text: `Confira os resultados do nosso pipeline de talentos. Média de Match: ${averageScore}%. Total de candidatos: ${totalCandidates}.`,
+            url: window.location.href
+        };
+
+        try {
+            if (navigator.share) {
+                await navigator.share(shareData);
+            } else {
+                await navigator.clipboard.writeText(`${shareData.title}\n${shareData.text}\n${shareData.url}`);
+                alert('Link e resumo do relatório copiados para a área de transferência!');
+            }
+        } catch (err) {
+            console.error('Erro ao compartilhar:', err);
+        }
+    };
 
     // Calculate metrics
     const totalCandidates = candidates.length;
@@ -41,10 +64,16 @@ const Reports = () => {
                     </p>
                 </div>
                 <div className="flex gap-3 print:hidden w-full md:w-auto">
-                    <button className="flex-1 md:flex-none justify-center px-4 py-2 text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 flex items-center gap-2 transition">
+                    <button
+                        onClick={handleShare}
+                        className="flex-1 md:flex-none justify-center px-4 py-2 text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 flex items-center gap-2 transition"
+                    >
                         <Share2 size={18} /> Compartilhar
                     </button>
-                    <button className="flex-1 md:flex-none justify-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 flex items-center gap-2 transition font-medium">
+                    <button
+                        onClick={handlePrint}
+                        className="flex-1 md:flex-none justify-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 flex items-center gap-2 transition font-medium"
+                    >
                         <Printer size={18} /> Imprimir
                     </button>
                 </div>
@@ -154,8 +183,8 @@ const Reports = () => {
                 </table>
             </div>
             <div className="hidden print:block mt-8 text-center text-xs text-slate-400">
-                <p>Relatório gerado automaticamente por TechSales AI System</p>
-                <p>{new Date().toLocaleDateString('pt-BR')} - Documento Interno Confidencial</p>
+                <p>Relatório gerado automaticamente por UseApto AI Recruitment</p>
+                <p>{new Date().toLocaleDateString('pt-BR')} - Documento Interno - {recruiterProfile?.company || 'Recrutamento'}</p>
             </div>
         </div>
     );

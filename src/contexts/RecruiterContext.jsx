@@ -10,42 +10,18 @@ export const RecruiterProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
 
     const defaultProfile = {
-        name: 'Roger César',
-        email: 'rogercsardev@gmail.com',
-        phone: '65999999999',
-        company: 'Apto',
-        role: 'Tech Recruiter',
-        address: 'Av. Paulista, 1000 - São Paulo, SP',
+        name: 'Recrutador',
+        email: 'contato@empresa.com',
+        phone: '(00) 00000-0000',
+        company: 'Minha Empresa',
+        role: 'Recrutador',
+        address: 'Cidade - Estado',
         avatar: null
     };
 
-    const defaultCandidates = [{
-        id: 1,
-        name: 'Roger Santos',
-        job: 'Auxiliar de RH',
-        email: 'rogercsar@outlook.com',
-        phone: '65992693812',
-        score: '9%',
-        strengths: ['Comunicação', 'Proatividade'],
-        gaps: ['Inglês Avançado', 'Power BI'],
-        cvText: 'RESUMO PROFISSIONAL\nProfissional com 5 anos de experiência em RH, focado em R&S e DP. \n\nEXPERIÊNCIA\n- Auxiliar de RH | Empresa X (2020-Atual)\n- Assistente Administrativo | Empresa Y (2018-2020)\n\nFORMAÇÃO\n- Gestão de Recursos Humanos | UNIC (2019)',
-        interview: {
-            status: 'pending', // pending, completed
-            score: null,
-            summary: null,
-            transcription: []
-        }
-    }];
+    const defaultCandidates = [];
 
-    const defaultJobs = [
-        {
-            id: 1,
-            title: "Auxiliar de RH",
-            area: "hr",
-            description: "Apoiar no processo de recrutamento e seleção para diferentes áreas do shopping...",
-            createdAt: new Date().toISOString()
-        }
-    ];
+    const defaultJobs = [];
 
     // BroadcastChannel for cross-tab synchronization
     const syncChannel = new BroadcastChannel('apto_sync');
@@ -57,7 +33,8 @@ export const RecruiterProvider = ({ children }) => {
                 const savedCandidates = await getData(STORES_ENUM.CANDIDATES);
                 const savedJobs = await getData(STORES_ENUM.JOBS);
 
-                if (profile) {
+                // If profile exists but name is the old mock name, reset it
+                if (profile && profile.name !== 'Roger César') {
                     setRecruiterProfile(profile);
                 } else {
                     setRecruiterProfile(defaultProfile);
@@ -65,24 +42,26 @@ export const RecruiterProvider = ({ children }) => {
                 }
 
                 if (savedCandidates && savedCandidates.length > 0) {
-                    // SANITIZATION: Ensure all candidates have IDs to prevent crashes
-                    const sanitizedCandidates = savedCandidates.map((c, index) => ({
-                        ...c,
-                        id: c.id || Date.now() + index // Ensure ID exists
-                    }));
-                    setCandidates(sanitizedCandidates);
+                    // Filter out the old mock candidate with ID 1 if it matches the name
+                    const sanitizedCandidates = savedCandidates
+                        .filter(c => !(c.id === 1 && c.name === 'Roger Santos'))
+                        .map((c, index) => ({
+                            ...c,
+                            id: c.id || Date.now() + index // Ensure ID exists
+                        }));
 
-                    // If we found candidates without IDs, save the fixed version immediately
-                    if (JSON.stringify(sanitizedCandidates) !== JSON.stringify(savedCandidates)) {
-                        await saveData(STORES_ENUM.CANDIDATES, sanitizedCandidates);
-                    }
+                    setCandidates(sanitizedCandidates);
+                    await saveData(STORES_ENUM.CANDIDATES, sanitizedCandidates);
                 } else {
                     setCandidates(defaultCandidates);
                     await saveData(STORES_ENUM.CANDIDATES, defaultCandidates);
                 }
 
                 if (savedJobs && savedJobs.length > 0) {
-                    setJobs(savedJobs);
+                    // Filter out the old mock job with ID 1
+                    const sanitizedJobs = savedJobs.filter(j => !(j.id === 1 && j.title === 'Auxiliar de RH'));
+                    setJobs(sanitizedJobs);
+                    await saveData(STORES_ENUM.JOBS, sanitizedJobs);
                 } else {
                     setJobs(defaultJobs);
                     await saveData(STORES_ENUM.JOBS, defaultJobs);

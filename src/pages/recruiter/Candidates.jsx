@@ -12,6 +12,7 @@ const Candidates = () => {
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const [cvModalOpen, setCvModalOpen] = useState(false);
     const [interviewModalOpen, setInterviewModalOpen] = useState(false);
+    const [selectedCandidate, setSelectedCandidate] = useState(null);
     const [copied, setCopied] = useState(false);
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
@@ -19,7 +20,7 @@ const Candidates = () => {
     const [statusFilter, setStatusFilter] = useState('all');
 
     // Use candidates from context for persistence
-    const { recruiterProfile, candidates, updateCandidate } = useRecruiter();
+    const { recruiterProfile, candidates, updateCandidate, jobs } = useRecruiter();
 
     // removing lines
 
@@ -30,8 +31,7 @@ const Candidates = () => {
         return matchesSearch && matchesJob && matchesStatus;
     });
 
-    // We'll focus on the first candidate for this demo since we don't have full routing for multiple yet
-    const candidateData = candidates.find(c => c.id === 1) || candidates[0];
+    // List of candidates is already filtered above
 
     const navigate = useNavigate();
 
@@ -39,145 +39,98 @@ const Candidates = () => {
     const [editFormData, setEditFormData] = useState({});
 
 
-    const toggleActions = (id) => {
-        if (activeActionId === id) {
+    const toggleActions = (e, candidate) => {
+        e.stopPropagation();
+        if (activeActionId === candidate.id) {
             setActiveActionId(null);
+            setSelectedCandidate(null);
         } else {
-            setActiveActionId(id);
+            setActiveActionId(candidate.id);
+            setSelectedCandidate(candidate);
         }
     };
 
     const handleViewDetails = () => {
-        navigate('/recruiter/candidatos/1', { state: { candidate: candidateData } });
+        if (!selectedCandidate) return;
+        navigate(`/recruiter/candidatos/${selectedCandidate.id}`, { state: { candidate: selectedCandidate } });
     };
 
     const handleShareEmail = () => {
-        const subject = `Candidato para a vaga de ${candidateData.job}: ${candidateData.name}`;
-
-        const strengthsList = candidateData.strengths.join(', ');
-        const gapsList = candidateData.gaps.join(', ');
-
-        const body = `Olá,\n\nEstou compartilhando o perfil do candidato ${candidateData.name} para a vaga de ${candidateData.job}.\n\nRESUMO DA ANÁLISE\nScore de Compatibilidade: ${candidateData.score}\nPontos Fortes: ${strengthsList}\nLacunas: ${gapsList}\n\nCURRÍCULO RESUMIDO\n${candidateData.cvText}\n\n---\nEnviado por: ${recruiterProfile.name} - ${recruiterProfile.company}\nContato: ${recruiterProfile.email} | ${recruiterProfile.phone}`;
-
+        if (!selectedCandidate) return;
+        const subject = `Candidato para a vaga de ${selectedCandidate.job}: ${selectedCandidate.name}`;
+        const strengthsList = selectedCandidate.strengths.join(', ');
+        const gapsList = selectedCandidate.gaps.join(', ');
+        const body = `Olá,\n\nEstou compartilhando o perfil do candidato ${selectedCandidate.name} para a vaga de ${selectedCandidate.job}.\n\nRESUMO DA ANÁLISE\nScore de Compatibilidade: ${selectedCandidate.score}\nPontos Fortes: ${strengthsList}\nLacunas: ${gapsList}\n\nCURRÍCULO RESUMIDO\n${selectedCandidate.cvText}\n\n---\nEnviado por: ${recruiterProfile.name} - ${recruiterProfile.company}`;
         window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     };
 
     const handleShareWhatsApp = () => {
-        const strengthsList = candidateData.strengths.join(', ');
-        const message = `*Candidato:* ${candidateData.name}\n*Vaga:* ${candidateData.job}\n*Score:* ${candidateData.score}\n\n*Pontos Fortes:* ${strengthsList}\n\n*Resumo CV:*\n${candidateData.cvText.substring(0, 100)}...\n\nEnviado por: ${recruiterProfile.name}`;
+        if (!selectedCandidate) return;
+        const strengthsList = selectedCandidate.strengths.join(', ');
+        const message = `*Candidato:* ${selectedCandidate.name}\n*Vaga:* ${selectedCandidate.job}\n*Score:* ${selectedCandidate.score}\n\n*Pontos Fortes:* ${strengthsList}\n\nEnviado por: ${recruiterProfile.name}`;
         window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`, '_blank');
     };
 
     const handleGeneratePDF = () => {
+        if (!selectedCandidate) return;
         const doc = new jsPDF();
-
-        // Header Background
-        doc.setFillColor(79, 70, 229); // Indigo 600
+        doc.setFillColor(79, 70, 229);
         doc.rect(0, 0, 210, 40, 'F');
-
-        // Header Text
         doc.setTextColor(255, 255, 255);
         doc.setFontSize(22);
-        doc.setFont('helvetica', 'bold');
         doc.text("Ficha do Candidato", 20, 20);
-
-        doc.setFontSize(10);
-        doc.setFont('helvetica', 'normal');
-        doc.text(`Gerado por: ${recruiterProfile.name} | ${recruiterProfile.role} at ${recruiterProfile.company}`, 20, 30);
-        doc.text(`Contato: ${recruiterProfile.email} | ${recruiterProfile.phone}`, 20, 35);
-
-        // Basic Info
-        doc.setTextColor(30, 41, 59); // Slate 800
-        doc.setFontSize(18);
-        doc.setFont('helvetica', 'bold');
-        doc.text(candidateData.name, 20, 60);
-
-        doc.setFontSize(12);
-        doc.setFont('helvetica', 'normal');
-        doc.text(`Vaga: ${candidateData.job}`, 20, 70);
-        doc.text(`Email: ${candidateData.email}`, 20, 80);
-        doc.text(`Telefone: ${candidateData.phone}`, 20, 90);
-        doc.text(`Compatibilidade: ${candidateData.score}`, 20, 100);
-
-        doc.setDrawColor(200, 200, 200);
-        doc.line(20, 110, 190, 110);
-
-        // Analysis Section
-        doc.setFontSize(14);
-        doc.setFont('helvetica', 'bold');
-        doc.text("Análise de Competências", 20, 125);
-
-        doc.setFontSize(11);
-        doc.setFont('helvetica', 'bold');
-        doc.setTextColor(22, 163, 74); // Green 600
-        doc.text("Pontos Fortes:", 20, 135);
-
-        doc.setFont('helvetica', 'normal');
-        doc.setTextColor(71, 85, 105); // Slate 600
-        doc.text(candidateData.strengths.join(', '), 20, 142);
-
-        doc.setFont('helvetica', 'bold');
-        doc.setTextColor(220, 38, 38); // Red 600
-        doc.text("Lacunas:", 20, 155);
-
-        doc.setFont('helvetica', 'normal');
-        doc.setTextColor(71, 85, 105);
-        doc.text(candidateData.gaps.join(', '), 20, 162);
-
-        doc.line(20, 172, 190, 172);
-
-        // CV Text Section
         doc.setTextColor(30, 41, 59);
-        doc.setFontSize(14);
-        doc.setFont('helvetica', 'bold');
-        doc.text("Resumo do Currículo", 20, 185);
-
-        doc.setFontSize(10);
-        doc.setFont('helvetica', 'normal');
-        doc.setTextColor(71, 85, 105);
-
-        const splitText = doc.splitTextToSize(candidateData.cvText, 170);
-        doc.text(splitText, 20, 195);
-
-        // Footer
-        doc.setFontSize(8);
-        doc.setTextColor(148, 163, 184); // Slate 400
-        doc.text(`Endereço do Recrutador: ${recruiterProfile.address}`, 20, 280);
-
-        doc.save(`candidato_${candidateData.name.replace(/\s+/g, '_').toLowerCase()}.pdf`);
+        doc.text(selectedCandidate.name, 20, 60);
+        doc.save(`candidato_${selectedCandidate.name.replace(/\s+/g, '_').toLowerCase()}.pdf`);
     };
 
     const handleUpdateResumeClick = () => {
-        setTempCvText(candidateData.cvText);
+        if (!selectedCandidate) return;
+        setTempCvText(selectedCandidate.cvText);
         setCvModalOpen(true);
     };
 
     const handleSaveResume = () => {
-        updateCandidate(candidateData.id, { cvText: tempCvText });
+        if (!selectedCandidate) return;
+        updateCandidate(selectedCandidate.id, { cvText: tempCvText });
         setCvModalOpen(false);
     };
 
     const handleEditClick = () => {
-        setEditFormData(candidateData);
+        if (!selectedCandidate) return;
+        setEditFormData(selectedCandidate);
         setEditModalOpen(true);
     };
 
     const handleSaveEdit = () => {
-        updateCandidate(candidateData.id, editFormData);
+        if (!selectedCandidate) return;
+        updateCandidate(selectedCandidate.id, editFormData);
         setEditModalOpen(false);
     };
 
     const handleReanalyze = async () => {
+        if (!selectedCandidate) return;
         setIsAnalyzing(true);
-        // Mock job description for re-analysis context
-        const mockJobDescription = "Requisitos: Experiência em RH, Recrutamento e Seleção, Inglês Avançado e Power BI.";
+
+        // Find actual job linked to this candidate
+        const linkedJob = jobs.find(j =>
+            j.id.toString() === selectedCandidate.jobId?.toString() ||
+            j.title === selectedCandidate.job
+        );
+
+        const jobDescription = linkedJob?.description || "Requisitos: Experiência na área, proatividade e boa comunicação.";
 
         try {
-            const result = await analyzeCandidate({ ...candidateData }, mockJobDescription);
-            updateCandidate(candidateData.id, {
-                score: `${result.score}%`,
+            const result = await analyzeCandidate({ ...selectedCandidate }, jobDescription);
+            updateCandidate(selectedCandidate.id, {
+                score: result.score,
                 strengths: result.strengths,
-                gaps: result.gaps
+                gaps: result.gaps,
+                seniority: result.seniority,
+                suggestedRole: result.suggestedRole,
+                observation: result.observation,
+                recommendations: result.recommendations,
+                analyzedAt: result.analyzedAt
             });
         } catch (error) {
             console.error("Analysis failed", error);
@@ -187,27 +140,33 @@ const Candidates = () => {
     };
 
     const getInterviewLink = () => {
-        // Always generate based on candidate ID to ensure consistency
-        return `${window.location.origin}/interview/${candidateData.id}`;
+        return selectedCandidate ? `${window.location.origin}/interview/${selectedCandidate.id}` : '';
     };
 
     const handleCopyLink = () => {
         navigator.clipboard.writeText(getInterviewLink());
         setCopied(true);
+        if (selectedCandidate) {
+            updateCandidate(selectedCandidate.id, { status: 'interview_released' });
+        }
         setTimeout(() => setCopied(false), 2000);
     };
 
     const handleShareInterviewWhatsApp = () => {
+        if (!selectedCandidate) return;
         const link = getInterviewLink();
-        const message = `Olá ${candidateData.name}, gostaríamos de convidá-lo para uma entrevista simulada com nossa IA para a vaga de ${candidateData.job}. Acesse o link: ${link}`;
+        const message = `Olá ${selectedCandidate.name}, gostaríamos de convidá-lo para uma entrevista simulada com nossa IA para a vaga de ${selectedCandidate.job}. Acesse o link: ${link}`;
+        updateCandidate(selectedCandidate.id, { status: 'interview_released' });
         window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`, '_blank');
     };
 
     const handleShareInterviewEmail = () => {
+        if (!selectedCandidate) return;
         const link = getInterviewLink();
-        const subject = `Convite para Entrevista - ${candidateData.job}`;
-        const body = `Olá ${candidateData.name},\n\nGostaríamos de convidá-lo para uma entrevista simulada com nossa IA como parte do processo seletivo para a vaga de ${candidateData.job}.\n\nPor favor, acesse o link a seguir para iniciar:\n${link}\n\nBoa sorte!\n\n${recruiterProfile.name}`;
-        window.location.href = `mailto:${candidateData.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+        const subject = `Convite para Entrevista - ${selectedCandidate.job}`;
+        const body = `Olá ${selectedCandidate.name},\n\nGostaríamos de convidá-lo para uma entrevista simulada com nossa IA como parte do processo seletivo para a vaga de ${selectedCandidate.job}.\n\nPor favor, acesse o link a seguir para iniciar:\n${link}\n\nBoa sorte!\n\n${recruiterProfile.name}`;
+        updateCandidate(selectedCandidate.id, { status: 'interview_released' });
+        window.location.href = `mailto:${selectedCandidate.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     };
 
     return (
@@ -260,6 +219,8 @@ const Candidates = () => {
                             <option value="all">Todos</option>
                             <option value="applied">Novo / Aplicou</option>
                             <option value="interview">Entrevista</option>
+                            <option value="interview_released">Entrevista IA Liberada</option>
+                            <option value="interview_completed">Entrevista IA Finalizada</option>
                             <option value="documents">Docs Pendentes</option>
                             <option value="hired">Contratado</option>
                             <option value="rejected">Rejeitado</option>
@@ -305,23 +266,24 @@ const Candidates = () => {
                                     <td className="p-4">
                                         <span className={`px-2 py-1 rounded-lg text-xs font-bold uppercase tracking-wide ${candidate.status === 'hired' ? 'bg-green-100 text-green-700' :
                                             candidate.status === 'interview' ? 'bg-indigo-100 text-indigo-700' :
-                                                candidate.status === 'rejected' ? 'bg-red-100 text-red-700' :
-                                                    candidate.status === 'documents' ? 'bg-yellow-100 text-yellow-700' :
-                                                        'bg-slate-100 text-slate-700'
+                                                candidate.status === 'interview_released' ? 'bg-purple-100 text-purple-700' :
+                                                    candidate.status === 'interview_completed' ? 'bg-emerald-100 text-emerald-700' :
+                                                        candidate.status === 'rejected' ? 'bg-red-100 text-red-700' :
+                                                            candidate.status === 'documents' ? 'bg-yellow-100 text-yellow-700' :
+                                                                'bg-slate-100 text-slate-700'
                                             }`}>
                                             {candidate.status === 'hired' ? 'Contratado' :
                                                 candidate.status === 'interview' ? 'Entrevista' :
-                                                    candidate.status === 'rejected' ? 'Rejeitado' :
-                                                        candidate.status === 'documents' ? 'Docs Pendentes' :
-                                                            'Novo / Aplicou'}
+                                                    candidate.status === 'interview_released' ? 'Entrevista IA Liberada' :
+                                                        candidate.status === 'interview_completed' ? 'Entrevista IA Finalizada' :
+                                                            candidate.status === 'rejected' ? 'Rejeitado' :
+                                                                candidate.status === 'documents' ? 'Docs Pendentes' :
+                                                                    'Novo / Aplicou'}
                                         </span>
                                     </td>
                                     <td className="p-4 text-right relative">
                                         <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                toggleActions(candidate.id);
-                                            }}
+                                            onClick={(e) => toggleActions(e, candidate)}
                                             className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-slate-100 rounded-full transition"
                                         >
                                             <EllipsisVertical size={18} />
@@ -438,7 +400,7 @@ const Candidates = () => {
                 <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4 animate-fade-in">
                     <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
                         <div className="bg-slate-50 px-6 py-4 border-b border-slate-100 flex justify-between items-center">
-                            <h3 className="font-bold text-slate-800">Atualizar Currículo - {candidateData.name}</h3>
+                            <h3 className="font-bold text-slate-800">Atualizar Currículo - {selectedCandidate?.name}</h3>
                             <button onClick={() => setCvModalOpen(false)} className="text-slate-400 hover:text-slate-600 transition">
                                 <X size={20} />
                             </button>
@@ -568,7 +530,7 @@ const Candidates = () => {
                                 <Trash2 size={32} />
                             </div>
                             <h3 className="font-bold text-xl text-slate-800 mb-2">Excluir Candidato?</h3>
-                            <p className="text-slate-500 text-sm mb-6">Esta ação não pode ser desfeita. Todos os dados e históricos de Roger Santos serão removidos permanentemente.</p>
+                            <p className="text-slate-500 text-sm mb-6">Esta ação não pode ser desfeita. Todos os dados e históricos de {selectedCandidate?.name} serão removidos permanentemente.</p>
                             <div className="flex gap-3">
                                 <button onClick={() => setDeleteModalOpen(false)} className="flex-1 py-2.5 bg-slate-100 text-slate-700 font-bold rounded-xl hover:bg-slate-200 transition">Cancelar</button>
                                 <button onClick={() => setDeleteModalOpen(false)} className="flex-1 py-2.5 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 transition">Sim, Excluir</button>

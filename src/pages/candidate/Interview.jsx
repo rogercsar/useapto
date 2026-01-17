@@ -14,36 +14,64 @@ const Interview = () => {
     const [messages, setMessages] = useState([]);
     const [inputText, setInputText] = useState('');
     const [isRecording, setIsRecording] = useState(false);
-    const [step, setStep] = useState(0); // 0: Intro, 1: Q1, 2: Q2, 3: Q3, 4: Finish
+    const [questions, setQuestions] = useState([]);
+    const [step, setStep] = useState(0);
     const [isThinking, setIsThinking] = useState(false);
     const messagesEndRef = useRef(null);
     const hasStarted = useRef(false);
 
-    const QUESTIONS = [
-        "Olá! Sou a IA da Apto. Vamos começar sua entrevista para a vaga. Primeiro, poderia me contar um pouco sobre sua última experiência profissional?",
-        "Interessante. E qual foi o maior desafio que você enfrentou nessa função e como resolveu?",
-        "Entendi. Para esta vaga, buscamos alguém com fortes habilidades de comunicação e organização. Como você avaliaria essas suas competências?",
-        "Perfeito. Obrigado por suas respostas. Vou gerar seu relatório de perfil agora."
-    ];
+    useEffect(() => {
+        const candidate = candidates?.find(c => c.id.toString() === candidateId || c.id === Number(candidateId));
+        if (candidate) {
+            const name = candidate.name.split(' ')[0];
+            const job = candidate.job;
+            const strengths = candidate.strengths?.length > 0 ? candidate.strengths.join(' e ') : 'sua proatividade';
+            const gaps = candidate.gaps?.length > 0 ? candidate.gaps.join(' e ') : 'novos desafios';
+
+            const dynamicQuestions = [
+                `Olá ${name}! Sou a IA da Apto. Vamos começar sua entrevista para a vaga de ${job}. Primeiro, poderia me contar um pouco sobre sua trajetória profissional até aqui?`,
+                `Interessante. Pensando especificamente na vaga de ${job}, qual foi o projeto ou responsabilidade mais relevante que você já assumiu?`,
+                `Para esta posição, o domínio de certas ferramentas e processos é crucial. Como você se sente trabalhando com as principais demandas de um ${job}?`,
+                `Notei em seu perfil que você se destaca em ${strengths}. Pode me dar um exemplo real de como aplicou essas habilidades para gerar um resultado positivo?`,
+                `Ao analisarmos os requisitos, identificamos que ${gaps} podem ser áreas de desenvolvimento para você. Como você pretende superar esses desafios técnicos?`,
+                `O que mais te atrai na nossa cultura e nessa oportunidade específica de ${job}?`,
+                `Em um ambiente dinâmico, as prioridades podem mudar rapidamente. Pode me contar uma situação onde você teve que lidar com uma mudança brusca de última hora?`,
+                `Excelente. Para encerrarmos, qual a sua expectativa de aprendizado e contribuição nos seus primeiros meses aqui conosco?`,
+                `Perfeito, ${name}. Obrigado por compartilhar tanto conosco. Vou processar suas respostas e gerar o relatório para o recrutador agora.`
+            ];
+            setQuestions(dynamicQuestions);
+        } else {
+            setQuestions([
+                "Olá! Sou a IA da Apto. Vamos começar sua entrevista. Primeiro, poderia me contar um pouco sobre sua última experiência profissional?",
+                "Interessante. E qual foi o maior desafio que você enfrentou nessa função e como resolveu?",
+                "Para esta vaga, buscamos alguém com fortes habilidades de comunicação. Como você avaliaria essas suas competências?",
+                "Pode me falar sobre seus principais pontos fortes e como eles agregam valor?",
+                "E sobre pontos a desenvolver, no que você está focando atualmente?",
+                "O que te motiva a buscar essa nova oportunidade conosco?",
+                "Como você lida com situações de alta pressão ou prazos curtos?",
+                "Quais são seus planos de carreira para os próximos anos?",
+                "Perfeito. Obrigado por suas respostas. Vou gerar seu relatório de perfil agora."
+            ]);
+        }
+    }, [candidates, candidateId]);
 
     useEffect(() => {
-        // Initial Greeting - prevent double run in strict mode
-        if (!hasStarted.current && messages.length === 0) {
+        if (!hasStarted.current && questions.length > 0 && messages.length === 0) {
             hasStarted.current = true;
-            simulateAIResponse(QUESTIONS[0]);
+            simulateAIResponse(questions[0]);
             setStep(1);
         }
-    }, [messages.length]);
+    }, [questions, messages.length]);
 
     useEffect(() => {
         scrollToBottom();
     }, [messages]);
 
     useEffect(() => {
-        if (step === QUESTIONS.length) {
+        if (questions.length > 0 && step === questions.length) {
             finishInterview();
         }
-    }, [step]);
+    }, [step, questions]);
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -66,8 +94,8 @@ const Interview = () => {
         setInputText('');
 
         // Move to next step
-        if (step < QUESTIONS.length) {
-            simulateAIResponse(QUESTIONS[step]);
+        if (step < questions.length) {
+            simulateAIResponse(questions[step]);
             setStep(prev => prev + 1);
         }
     };
@@ -178,16 +206,17 @@ const Interview = () => {
         };
 
         if (candidate) {
-            await updateCandidate(candidate.id, { interview: interviewData });
+            await updateCandidate(candidate.id, {
+                interview: interviewData,
+                status: 'interview_completed'
+            });
         } else {
             console.warn("Candidate not found in context for update, or running in standalone mode.");
         }
     };
 
     const handleClose = () => {
-        window.close(); // Try closing tab
-        // If not allowed, maybe redirect or show message
-        window.location.href = '/recruiter/candidatos';
+        window.location.href = '/';
     };
 
     const handleKeyPress = (e) => {
@@ -208,7 +237,7 @@ const Interview = () => {
                             <p className="text-indigo-200 text-xs">Apto AI Interviewer</p>
                         </div>
                     </div>
-                    {step >= QUESTIONS.length && (
+                    {questions.length > 0 && step >= questions.length && (
                         <span className="bg-green-400 text-indigo-900 text-xs font-bold px-3 py-1 rounded-full">
                             Concluída
                         </span>
@@ -249,9 +278,8 @@ const Interview = () => {
                     <div ref={messagesEndRef} />
                 </div>
 
-                {/* Input Area */}
                 <div className="p-4 bg-white border-t border-slate-100">
-                    {step < QUESTIONS.length ? (
+                    {questions.length > 0 && step < questions.length ? (
                         <div className="flex gap-2 relative">
                             <input
                                 type="text"

@@ -16,7 +16,7 @@ const PublicJobApply = () => {
     const [formData, setFormData] = useState({
         name: '',
         email: '',
-        whatsapp: '',
+        phone: '',
         cvText: ''
     });
     const [fileName, setFileName] = useState('');
@@ -61,7 +61,7 @@ const PublicJobApply = () => {
         setIsSubmitting(true);
         try {
             // Analyze candidate immediately
-            const analysisResult = await analyzeCandidate(formData, job.description);
+            const analysisResult = await analyzeCandidate({ ...formData, job: job.title }, job.description);
 
             // Create candidate object
             const newCandidate = {
@@ -156,8 +156,8 @@ const PublicJobApply = () => {
                                 <label className="block text-sm font-bold text-slate-700 mb-2">WhatsApp / Telefone</label>
                                 <input
                                     required
-                                    name="whatsapp"
-                                    value={formData.whatsapp}
+                                    name="phone"
+                                    value={formData.phone}
                                     onChange={handleInputChange}
                                     className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 transition"
                                     placeholder="(00) 00000-0000"

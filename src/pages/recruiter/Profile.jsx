@@ -4,7 +4,7 @@ import { useRecruiter } from '../../contexts/RecruiterContext';
 
 const Profile = () => {
     const fileInputRef = useRef(null);
-    const { recruiterProfile, updateProfile } = useRecruiter();
+    const { recruiterProfile, updateProfile, jobs, candidates } = useRecruiter();
     const [isEditing, setIsEditing] = useState(false);
 
     // Local state for the form to handle changes before saving
@@ -81,12 +81,12 @@ const Profile = () => {
 
                     <div className="flex gap-4 w-full justify-center">
                         <div className="text-center">
-                            <span className="block text-2xl font-bold text-indigo-600">1</span>
+                            <span className="block text-2xl font-bold text-indigo-600">{jobs.length}</span>
                             <span className="text-[10px] uppercase font-bold text-slate-400">Vagas</span>
                         </div>
                         <div className="w-px bg-slate-200"></div>
                         <div className="text-center">
-                            <span className="block text-2xl font-bold text-emerald-600">1</span>
+                            <span className="block text-2xl font-bold text-emerald-600">{candidates.length}</span>
                             <span className="text-[10px] uppercase font-bold text-slate-400">Candidatos</span>
                         </div>
                     </div>
@@ -100,12 +100,18 @@ const Profile = () => {
                         </h3>
                         <div className="grid grid-cols-2 gap-6">
                             <div className="p-4 bg-indigo-50 rounded-xl border border-indigo-100">
-                                <div className="text-3xl font-bold text-indigo-700 mb-1">9%</div>
+                                <div className="text-3xl font-bold text-indigo-700 mb-1">
+                                    {candidates.length > 0
+                                        ? Math.round(candidates.reduce((acc, c) => acc + (parseInt(c.score) || 0), 0) / candidates.length)
+                                        : 0}%
+                                </div>
                                 <div className="text-sm text-indigo-900 font-medium">Média de Compatibilidade</div>
                                 <div className="text-xs text-indigo-400 mt-1">Qualidade do seu pipeline</div>
                             </div>
                             <div className="p-4 bg-emerald-50 rounded-xl border border-emerald-100">
-                                <div className="text-3xl font-bold text-emerald-700 mb-1 capitalize truncate">Recursos Humanos</div>
+                                <div className="text-3xl font-bold text-emerald-700 mb-1 capitalize truncate">
+                                    {[...new Set(jobs.map(j => j.area))][0] || "Geral"}
+                                </div>
                                 <div className="text-sm text-emerald-900 font-medium">Área Mais Ativa</div>
                                 <div className="text-xs text-emerald-400 mt-1">Onde você mais contrata</div>
                             </div>
@@ -120,12 +126,20 @@ const Profile = () => {
                 </h3>
                 <p className="text-slate-500 text-sm">Registro de atividades de recrutamento e gerenciamento.</p>
                 <div className="mt-4 space-y-3">
-                    <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg border border-slate-100">
-                        <div className="w-2 h-2 rounded-full bg-indigo-500"></div>
-                        <div className="text-sm">
-                            <span className="font-bold text-slate-700">Nova vaga criada:</span> Auxiliar de RH
-                            <span className="text-slate-400 ml-2 text-xs">06/01/2026</span>
-                        </div>
+                    <div className="mt-4 space-y-3">
+                        {jobs.length > 0 ? jobs.slice(0, 5).map(job => (
+                            <div key={job.id} className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg border border-slate-100">
+                                <div className="w-2 h-2 rounded-full bg-indigo-500"></div>
+                                <div className="text-sm">
+                                    <span className="font-bold text-slate-700">Nova vaga criada:</span> {job.title}
+                                    <span className="text-slate-400 ml-2 text-xs">
+                                        {new Date(job.createdAt || Date.now()).toLocaleDateString('pt-BR')}
+                                    </span>
+                                </div>
+                            </div>
+                        )) : (
+                            <p className="text-sm text-slate-400 italic">Nenhuma atividade recente.</p>
+                        )}
                     </div>
                 </div>
             </div>

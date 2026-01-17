@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
 import { Award, Sparkles, X, User, Plus, Loader2 } from 'lucide-react';
-import { useRecruiter } from '../../contexts/RecruiterContext';
 
-const Compare = () => {
-    const { candidates } = useRecruiter();
+const CandidateComparator = ({ candidates }) => {
     const [selectedIds, setSelectedIds] = useState([null, null]);
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [analysisResult, setAnalysisResult] = useState(null);
@@ -21,10 +19,10 @@ const Compare = () => {
             const bestCandidate = [...selectedCandidates].sort((a, b) => parseInt(b.score) - parseInt(a.score))[0];
             const result = {
                 title: "Veredito da IA: Comparativo de Talentos",
-                summary: `Análise finalizada! O candidato ${bestCandidate.name} possui a maior aderência técnica para o escopo atual, destacando-se pela senioridade e fit cultural.`,
+                summary: `Após analisar os perfis lado a lado, o candidato ${bestCandidate.name} se destaca como o mais preparado para os desafios técnicos da posição, especialmente em ${bestCandidate.strengths?.slice(0, 2).join(' e ')}.`,
                 ranking: selectedCandidates.sort((a, b) => parseInt(b.score) - parseInt(a.score)),
-                overallInsight: "O grupo de candidatos selecionado apresenta alta diversidade de backgrounds, o que é positivo para o time.",
-                recommendation: `Prosseguir com a entrevista de painel para ${bestCandidate.name}.`
+                overallInsight: "O grupo apresenta boa senioridade técnica, mas há uma carência comum em ferramentas específicas de gestão de dados entre os perfis menos experientes.",
+                recommendation: `Avançar com ${bestCandidate.name} para a etapa de entrevista técnica focada em arquitetura.`
             };
             setAnalysisResult(result);
             setIsAnalyzing(false);
@@ -38,108 +36,110 @@ const Compare = () => {
     };
 
     const removeColumn = (index) => {
-        const newIds = selectedIds.filter((_, i) => i !== index);
-        if (newIds.length < 2) {
-            setSelectedIds([...newIds, null]);
+        const newIds = [...selectedIds];
+        const filteredIds = selectedIds.filter((_, i) => i !== index);
+        // Ensure at least 2 columns are visible if desired, or just allow removal
+        if (filteredIds.length < 2) {
+            setSelectedIds([...filteredIds, null]);
         } else {
-            setSelectedIds(newIds);
+            setSelectedIds(filteredIds);
         }
     };
 
     const addColumn = () => {
-        if (selectedIds.length < 4) {
+        if (selectedIds.length < 4) { // Limit to 4 for layout reasons
             setSelectedIds([...selectedIds, null]);
         }
     };
 
     return (
-        <div className="p-8 h-full flex flex-col animate-fade-in max-w-7xl mx-auto">
-            <div className="mb-6 flex justify-between items-center">
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden mt-8">
+            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/30">
                 <div>
-                    <h2 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
-                        <Award className="text-indigo-600" size={24} /> Comparador de Candidatos
-                    </h2>
-                    <p className="text-slate-500 text-sm">Analise perfis lado a lado para tomar a melhor decisão.</p>
+                    <h3 className="font-bold text-lg text-slate-800 flex items-center gap-2">
+                        <Award className="text-indigo-600" size={20} /> Comparativo Direto
+                    </h3>
+                    <p className="text-xs text-slate-500">Selecione candidatos para comparar competências e match lado a lado.</p>
                 </div>
                 <button
                     onClick={handleGenerateAnalysis}
                     disabled={isAnalyzing || selectedIds.filter(id => id).length < 2}
-                    className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-bold shadow-lg shadow-indigo-200 hover:shadow-xl hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:translate-y-0"
+                    className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg text-sm font-bold hover:shadow-md transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                    {isAnalyzing ? <Loader2 className="animate-spin" size={20} /> : <Sparkles className="text-yellow-300" size={20} />}
-                    <span>{isAnalyzing ? "Analisando..." : "Gerar Análise IA"}</span>
+                    {isAnalyzing ? <Loader2 className="animate-spin" size={16} /> : <Sparkles size={16} />}
+                    <span>{isAnalyzing ? 'Analisando...' : 'Resumo Multi-Perfil'}</span>
                 </button>
             </div>
-            <div className="flex-1 overflow-x-auto pb-6">
-                <div className="flex gap-6 min-w-max h-full">
+
+            <div className="p-6 overflow-x-auto">
+                <div className="flex gap-4 min-w-max pb-4">
                     {selectedIds.map((selectedId, idx) => {
                         const candidate = candidates.find(c => c.id.toString() === selectedId?.toString());
 
                         return (
-                            <div key={idx} className="w-[350px] flex flex-col bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden relative group transition-all hover:shadow-md">
-                                <div className="p-4 bg-slate-50 border-b border-slate-100 relative">
+                            <div key={idx} className="w-[280px] flex flex-col bg-white rounded-xl border border-slate-200 overflow-hidden relative group transition-all hover:border-indigo-200">
+                                <div className="p-3 bg-slate-50/50 border-b border-slate-100 relative">
                                     <button
                                         onClick={() => removeColumn(idx)}
-                                        className="absolute top-2 right-2 p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-full transition opacity-0 group-hover:opacity-100"
-                                        title="Remover Coluna"
+                                        className="absolute top-1.5 right-1.5 p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-full transition opacity-0 group-hover:opacity-100"
                                     >
-                                        <X size={16} />
+                                        <X size={14} />
                                     </button>
-                                    <div className="flex flex-col gap-2">
-                                        <label className="text-xs font-bold text-slate-400 uppercase">Selecionar Candidato</label>
-                                        <select
-                                            value={selectedId || ""}
-                                            onChange={(e) => handleSelectChange(idx, e.target.value)}
-                                            className="w-full p-2 bg-white border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500 font-medium"
-                                        >
-                                            <option value="" disabled>Escolher da lista...</option>
-                                            {candidates.map(c => (
-                                                <option key={c.id} value={c.id}>{c.name} ({c.score})</option>
-                                            ))}
-                                        </select>
-                                    </div>
+                                    <select
+                                        value={selectedId || ""}
+                                        onChange={(e) => handleSelectChange(idx, e.target.value)}
+                                        className="w-full p-2 bg-white border border-slate-200 rounded-lg text-xs outline-none focus:ring-2 focus:ring-indigo-500 font-medium"
+                                    >
+                                        <option value="" disabled>Selecionar...</option>
+                                        {candidates.map(c => (
+                                            <option key={c.id} value={c.id}>{c.name} ({c.score})</option>
+                                        ))}
+                                    </select>
                                 </div>
 
                                 {candidate ? (
-                                    <div className="p-6 flex-1 overflow-y-auto space-y-6 animate-fade-in">
-                                        <div className="text-center">
-                                            <div className="w-16 h-16 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center mx-auto mb-3 font-black text-xl">
+                                    <div className="p-4 flex-1 space-y-4 animate-fade-in">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center font-black text-sm shrink-0">
                                                 {candidate.name.charAt(0)}
                                             </div>
-                                            <div className="font-bold text-slate-800">{candidate.name}</div>
-                                            <div className="text-xs text-slate-500 truncate">{candidate.job}</div>
-                                            <div className="mt-2 inline-block px-3 py-1 bg-green-50 text-green-700 rounded-full text-xs font-bold">
-                                                Match: {candidate.score}
+                                            <div className="min-w-0">
+                                                <div className="font-bold text-slate-800 text-sm truncate">{candidate.name}</div>
+                                                <div className={`text-[10px] font-bold uppercase ${parseInt(candidate.score) > 70 ? 'text-green-600' : 'text-amber-600'}`}>
+                                                    Match {candidate.score}
+                                                </div>
                                             </div>
                                         </div>
 
-                                        <div className="space-y-4">
+                                        <div className="space-y-3">
                                             <div>
-                                                <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Senioridade</h4>
-                                                <span className="px-2 py-1 bg-indigo-50 text-indigo-700 rounded text-[10px] font-bold uppercase">{candidate.seniority}</span>
+                                                <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Maturidade</h4>
+                                                <span className="px-2 py-0.5 bg-indigo-50 text-indigo-700 rounded text-[10px] font-bold uppercase">
+                                                    {candidate.seniority || 'Não detectado'}
+                                                </span>
                                             </div>
 
                                             <div>
-                                                <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Pontos Fortes</h4>
-                                                <div className="flex flex-wrap gap-1.5">
-                                                    {candidate.strengths?.slice(0, 4).map((s, i) => (
-                                                        <span key={i} className="px-2 py-0.5 bg-slate-100 text-slate-600 rounded text-[10px] font-medium">{s}</span>
+                                                <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Fortalezas</h4>
+                                                <div className="flex flex-wrap gap-1">
+                                                    {candidate.strengths?.slice(0, 3).map((s, i) => (
+                                                        <span key={i} className="px-1.5 py-0.5 bg-slate-50 text-slate-600 border border-slate-100 rounded text-[9px]">{s}</span>
                                                     ))}
                                                 </div>
                                             </div>
 
                                             <div>
-                                                <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Resumo da IA</h4>
-                                                <p className="text-xs text-slate-600 leading-relaxed italic line-clamp-6">
-                                                    "{candidate.observation || "Nenhuma observação detalhada disponível."}"
+                                                <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">IA Insight</h4>
+                                                <p className="text-[11px] text-slate-600 leading-tight italic line-clamp-3">
+                                                    "{candidate.observation || "Sem observações."}"
                                                 </p>
                                             </div>
                                         </div>
                                     </div>
                                 ) : (
-                                    <div className="flex-1 flex flex-col items-center justify-center text-slate-300 p-8 text-center border-t border-slate-50 border-dashed">
-                                        <User className="mb-4 opacity-20" size={48} />
-                                        <p className="text-sm">Selecione um candidato acima para visualizar os dados.</p>
+                                    <div className="flex-1 flex flex-col items-center justify-center text-slate-300 p-8 text-center min-h-[180px]">
+                                        <User className="mb-2 opacity-10" size={32} />
+                                        <p className="text-[10px] uppercase font-bold tracking-wider">Aguardando seleção</p>
                                     </div>
                                 )}
                             </div>
@@ -149,17 +149,14 @@ const Compare = () => {
                     {selectedIds.length < 4 && (
                         <button
                             onClick={addColumn}
-                            className="w-[100px] flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-slate-200 text-slate-400 hover:border-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all flex-shrink-0"
+                            className="w-[60px] flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-200 text-slate-400 hover:border-indigo-400 hover:text-indigo-600 hover:bg-slate-50 transition-all shrink-0"
+                            title="Adicionar Comparativo"
                         >
-                            <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center">
-                                <Plus size={24} />
-                            </div>
-                            <span className="font-bold text-sm">Adicionar</span>
+                            <Plus size={20} />
                         </button>
                     )}
                 </div>
             </div>
-
             {/* AI Summary Modal */}
             {analysisResult && (
                 <div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4 animate-fade-in backdrop-blur-sm">
@@ -234,4 +231,4 @@ const Compare = () => {
     );
 };
 
-export default Compare;
+export default CandidateComparator;

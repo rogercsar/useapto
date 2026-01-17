@@ -1,13 +1,15 @@
 import React from 'react';
-import { ArrowLeft, Mail, MessageSquare, Sparkles, Briefcase, ChartNoAxesColumn, X, Save, Share2, Printer } from 'lucide-react';
-import { Link, useParams, useLocation } from 'react-router-dom';
+import { ArrowLeft, Mail, MessageSquare, Sparkles, Briefcase, ChartNoAxesColumn, X, Save, Share2, Printer, TrendingUp, Target, Info } from 'lucide-react';
+import { Link, useParams, useLocation, useNavigate } from 'react-router-dom';
+import jsPDF from 'jspdf';
 
 import { useRecruiter } from '../../contexts/RecruiterContext';
 
 const CandidateDetails = () => {
     const { id } = useParams();
     const location = useLocation();
-    const { candidates } = useRecruiter();
+    const navigate = useNavigate();
+    const { candidates, jobs, recruiterProfile } = useRecruiter();
 
     // Use candidate from Context as primary source (for updates), fall back to location state or default
     // We try to find by ID first
@@ -15,36 +17,108 @@ const CandidateDetails = () => {
 
     // Fallback data if no state is passed
     const defaultCandidate = {
-        name: 'Roger Santos',
-        job: 'Auxiliar de RH',
-        email: 'rogercsar@outlook.com',
-        phone: '65992693812',
-        score: 9,
-        strengths: ['Comunicação', 'Proatividade'],
-        gaps: ['Inglês Avançado', 'Power BI'],
-        cvText: 'RESUMO PROFISSIONAL\nProfissional com 5 anos de experiência em RH, focado em R&S e DP. \n\nEXPERIÊNCIA\n- Auxiliar de RH | Empresa X (2020-Atual)\n- Assistente Administrativo | Empresa Y (2018-2020)\n\nFORMAÇÃO\n- Gestão de Recursos Humanos | UNIC (2019)'
+        name: 'Candidato não encontrado',
+        job: '-',
+        email: '-',
+        phone: '-',
+        score: 0,
+        strengths: [],
+        gaps: [],
+        cvText: 'Nenhum dado disponível.'
     };
 
     const candidate = contextCandidate || location.state?.candidate || defaultCandidate;
+
+    const handleShareEmail = () => {
+        const subject = `Relatório de Candidato: ${candidate.name} - ${candidate.job}`;
+        const body = `Olá,\n\nSegue o relatório detalhado do candidato ${candidate.name} para a vaga de ${candidate.job}.\n\nScore de Compatibilidade: ${candidate.score}\n\nEnviado por: ${recruiterProfile.name} via UseApto.`;
+        window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    };
+
+    const handleShareWhatsApp = () => {
+        const message = `*Relatório de Candidato*\n\n*Nome:* ${candidate.name}\n*Vaga:* ${candidate.job}\n*Score:* ${candidate.score}\n\nVisualizado via UseApto.`;
+        window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`, '_blank');
+    };
+
+    const handlePrint = () => {
+        const doc = new jsPDF();
+
+        // Header
+        doc.setFillColor(79, 70, 229);
+        doc.rect(0, 0, 210, 30, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(20);
+        doc.text("Relatório de Candidato - UseApto", 20, 20);
+
+        // Content
+        doc.setTextColor(30, 41, 59);
+        doc.setFontSize(16);
+        doc.text(candidate.name, 20, 50);
+        doc.setFontSize(12);
+        doc.text(`Vaga: ${candidate.job}`, 20, 60);
+        doc.text(`Score: ${candidate.score}`, 20, 70);
+        doc.text(`Email: ${candidate.email}`, 20, 80);
+
+        doc.text("Pontos Fortes:", 20, 100);
+        candidate.strengths?.slice(0, 5).forEach((s, i) => {
+            doc.text(`- ${s}`, 25, 110 + (i * 7));
+        });
+
+        doc.save(`${candidate.name.replace(/\s+/g, '_')}_Relatorio.pdf`);
+    };
 
     return (
         <div className="flex-1 overflow-x-hidden">
             <div className="p-8 max-w-7xl mx-auto animate-fade-in relative">
                 <div className="animate-fade-in max-w-4xl mx-auto">
-                    <Link to="/recruiter/vagas/1" className="text-slate-500 mb-6 hover:text-indigo-600 flex items-center gap-2 font-medium w-fit transition-colors">
-                        <ArrowLeft size={18} /> Voltar para Vaga
-                    </Link>
+                    <div className="flex justify-between items-center mb-6">
+                        <button
+                            onClick={() => navigate(-1)}
+                            className="text-slate-500 hover:text-indigo-600 flex items-center gap-2 font-medium w-fit transition-colors"
+                        >
+                            <ArrowLeft size={18} /> Voltar
+                        </button>
+
+                        <div className="flex gap-2">
+                            <button
+                                onClick={handlePrint}
+                                className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-xl text-sm font-bold hover:bg-slate-50 transition-all shadow-sm"
+                                title="Gerar PDF"
+                            >
+                                <Printer size={18} /> <span>PDF</span>
+                            </button>
+                            <button
+                                onClick={handleShareWhatsApp}
+                                className="flex items-center gap-2 px-4 py-2 bg-green-50 text-green-700 border border-green-100 rounded-xl text-sm font-bold hover:bg-green-100 transition-all shadow-sm"
+                            >
+                                <MessageSquare size={18} /> <span>WhatsApp</span>
+                            </button>
+                            <button
+                                onClick={handleShareEmail}
+                                className="flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-700 border border-indigo-100 rounded-xl text-sm font-bold hover:bg-indigo-100 transition-all shadow-sm"
+                            >
+                                <Share2 size={18} /> <span>Compartilhar</span>
+                            </button>
+                        </div>
+                    </div>
+
                     <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-6">
                         <div className="bg-slate-50 p-8 border-b border-slate-100 flex justify-between items-start">
                             <div>
                                 <h2 className="text-3xl font-black text-slate-800 mb-2">{candidate.name}</h2>
-                                <div className="flex gap-4 text-sm text-slate-500">
+                                <div className="flex flex-wrap gap-4 text-sm text-slate-500">
                                     <span className="flex items-center gap-1.5">
                                         <Mail size={16} /> {candidate.email}
                                     </span>
                                     <span className="flex items-center gap-1.5">
                                         <MessageSquare size={16} /> {candidate.phone}
                                     </span>
+                                    {candidate.seniority && (
+                                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-widest ${candidate.seniority === 'senior' || candidate.seniority === 'gestao' ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-200 text-slate-700'
+                                            }`}>
+                                            Nível Detected: {candidate.seniority}
+                                        </span>
+                                    )}
                                 </div>
                             </div>
                             <div className="text-right">
@@ -54,6 +128,28 @@ const CandidateDetails = () => {
                                 <div className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Compatibilidade</div>
                             </div>
                         </div>
+
+                        {/* Enhanced Insights Section */}
+                        {(candidate.observation || candidate.suggestedRole) && (
+                            <div className="px-8 py-6 bg-indigo-600 text-white flex flex-col md:flex-row gap-8 items-center">
+                                <div className="flex-1">
+                                    <h3 className="text-xs font-bold uppercase tracking-[0.2em] mb-3 text-indigo-200 flex items-center gap-2">
+                                        <Target size={14} /> Enquadramento de Perfil
+                                    </h3>
+                                    <p className="text-lg font-medium leading-relaxed">
+                                        "{candidate.observation || `O perfil demonstra competências para o nível ${candidate.seniority}.`}"
+                                    </p>
+                                </div>
+                                {candidate.suggestedRole && candidate.suggestedRole.toLowerCase() !== candidate.job.toLowerCase() && (
+                                    <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20 min-w-[240px]">
+                                        <div className="text-[10px] font-bold text-indigo-200 uppercase mb-2">Recomendamos para:</div>
+                                        <div className="text-xl font-black">{candidate.suggestedRole}</div>
+                                        <div className="text-[10px] text-indigo-300 mt-2 italic">*Baseado na maturidade técnica detectada</div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
                         <div className="p-8 grid md:grid-cols-2 gap-10">
                             <div>
                                 <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2">
@@ -93,18 +189,32 @@ const CandidateDetails = () => {
                                 <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2">
                                     <Briefcase className="text-indigo-500" size={18} /> Vaga Relacionada
                                 </h3>
-                                <div className="bg-slate-50 p-5 rounded-xl border border-slate-200 mb-6">
-                                    <div className="text-sm font-bold text-slate-900 mb-1">Auxiliar de RH</div>
+                                <div className="bg-slate-50 p-5 rounded-xl border border-slate-200 mb-6 text-left">
+                                    <div className="text-sm font-bold text-slate-900 mb-1">{candidate.job}</div>
                                     <div className="text-xs text-slate-500 line-clamp-4 leading-relaxed">
-                                        Apoiar no processo de recrutamento e seleção para diferentes áreas do shopping...
+                                        {jobs.find(j => j.title === candidate.job)?.description || "Descrição da vaga não disponível."}
                                     </div>
                                 </div>
-                                <div className="space-y-3">
-                                    <p className="text-xs text-center text-slate-400">Use os botões de ação na lista para editar ou remover.</p>
-                                </div>
+
+                                {candidate.recommendations && (
+                                    <div className="mt-8">
+                                        <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2">
+                                            <TrendingUp className="text-emerald-500" size={18} /> Insights e Recomendações
+                                        </h3>
+                                        <div className="space-y-3">
+                                            {candidate.recommendations.map((rec, idx) => (
+                                                <div key={idx} className="flex gap-3 text-sm p-3 bg-emerald-50 text-emerald-800 rounded-xl border border-emerald-100">
+                                                    <Info size={18} className="shrink-0 mt-0.5 text-emerald-500" />
+                                                    <p>{rec}</p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
+
                     {/* Interview Report Section */}
                     <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-6">
                         <div className="bg-slate-50 px-6 py-4 border-b border-slate-100 font-bold text-slate-700 flex items-center justify-between">
