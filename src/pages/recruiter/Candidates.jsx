@@ -173,7 +173,7 @@ const Candidates = () => {
         <div className="p-4 md:p-8 max-w-7xl mx-auto animate-fade-in relative min-h-screen" onClick={() => setActiveActionId(null)}>
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0 mb-8">
                 <div>
-                    <h2 className="text-2xl font-bold text-slate-800">Gerenciar Candidatos</h2>
+                    <h2 className="text-2xl font-bold text-slate-800">Banco de Talentos</h2>
                     <p className="text-slate-500 text-sm">Visualize e filtre sua base de talentos.</p>
                 </div>
             </div>

@@ -143,6 +143,25 @@ export const RecruiterProvider = ({ children }) => {
         return jobWithId;
     };
 
+    const updateJob = async (id, newData) => {
+        const updatedJobs = jobs.map(job => {
+            if (job.id.toString() === id.toString()) {
+                return { ...job, ...newData };
+            }
+            return job;
+        });
+        setJobs(updatedJobs);
+        await saveData(STORES_ENUM.JOBS, updatedJobs);
+        syncChannel.postMessage('update_jobs');
+    };
+
+    const deleteJob = async (id) => {
+        const updatedJobs = jobs.filter(j => j.id.toString() !== id.toString());
+        setJobs(updatedJobs);
+        await saveData(STORES_ENUM.JOBS, updatedJobs);
+        syncChannel.postMessage('update_jobs');
+    };
+
     if (loading) {
         return <div className="min-h-screen flex items-center justify-center">Carregando dados...</div>;
     }
@@ -156,6 +175,8 @@ export const RecruiterProvider = ({ children }) => {
             setCandidates: setCandidatesAndSave,
             jobs,
             addJob,
+            updateJob,
+            deleteJob,
             deleteCandidate
         }}>
             {children}

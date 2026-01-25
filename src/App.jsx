@@ -12,6 +12,7 @@ import Reports from './pages/recruiter/Reports';
 import Profile from './pages/recruiter/Profile';
 import JobDetails from './pages/recruiter/JobDetails';
 import CandidateDetails from './pages/recruiter/CandidateDetails';
+import Finance from './pages/recruiter/Finance';
 import Interview from './pages/candidate/Interview';
 import PublicJobs from './pages/public/PublicJobs';
 import PublicJobApply from './pages/public/PublicJobApply';
@@ -38,6 +39,7 @@ function App() {
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="vagas" element={<Jobs />} />
             <Route path="vagas/:id" element={<JobDetails />} />
+            <Route path="financeiro" element={<Finance />} />
             <Route path="candidatos" element={<Candidates />} />
             <Route path="candidatos/:id" element={<CandidateDetails />} />
             <Route path="comparar" element={<Compare />} />

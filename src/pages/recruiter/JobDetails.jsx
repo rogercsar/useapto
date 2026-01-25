@@ -204,6 +204,32 @@ const JobDetails = () => {
         setSelectedCandidate(null);
     };
 
+    // --- Job Edit Handlers ---
+    const { updateJob } = useRecruiter();
+    const [editJobModalOpen, setEditJobModalOpen] = useState(false);
+    const [jobEditData, setJobEditData] = useState({});
+
+    const handleEditJobClick = () => {
+        setJobEditData({
+            title: job.title,
+            area: job.area,
+            description: job.description,
+            salary: job.salary,
+            benefitsValue: job.benefitsValue,
+            benefitsDescription: job.benefitsDescription
+        });
+        setEditJobModalOpen(true);
+    };
+
+    const handleSaveJobEdit = () => {
+        updateJob(job.id, {
+            ...jobEditData,
+            salary: parseFloat(jobEditData.salary) || 0,
+            benefitsValue: parseFloat(jobEditData.benefitsValue) || 0
+        });
+        setEditJobModalOpen(false);
+    };
+
     // --- Helpers ---
 
     const getStatusColor = (status) => {
@@ -214,6 +240,7 @@ const JobDetails = () => {
             case 'interview_completed': return 'bg-emerald-100 text-emerald-700';
             case 'rejected': return 'bg-red-100 text-red-700';
             case 'documents': return 'bg-yellow-100 text-yellow-700';
+            case 'suggested': return 'bg-sky-100 text-sky-700';
             default: return 'bg-slate-100 text-slate-700';
         }
     };
@@ -226,6 +253,7 @@ const JobDetails = () => {
             case 'interview_completed': return 'Entrevista IA Finalizada';
             case 'rejected': return 'Rejeitado';
             case 'documents': return 'Docs Pendentes';
+            case 'suggested': return 'Sugerido (IA)';
             default: return 'Novo / Aplicou';
         }
     };
@@ -243,12 +271,39 @@ const JobDetails = () => {
 
                 <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8 mb-8">
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                        <div>
+                        <div className="flex-1">
                             <div className="flex items-center gap-3 mb-2">
                                 <h1 className="text-3xl font-bold text-slate-800">{job.title}</h1>
                                 <span className="bg-indigo-50 text-indigo-700 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide">{job.area}</span>
+                                <button
+                                    onClick={handleEditJobClick}
+                                    className="ml-2 p-1 text-slate-400 hover:text-indigo-600 transition"
+                                    title="Editar Vaga"
+                                >
+                                    <SquarePen size={18} />
+                                </button>
                             </div>
-                            <p className="text-slate-500 max-w-2xl">{job.description}</p>
+                            <p className="text-slate-500 max-w-2xl mb-4">{job.description}</p>
+
+                            {/* Financial Info */}
+                            <div className="flex flex-wrap gap-4 mt-4 pt-4 border-t border-slate-100">
+                                <div className="px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-lg text-sm font-bold border border-emerald-100">
+                                    Salário: {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(job.salary || 0)}
+                                </div>
+                                <div className="px-3 py-1.5 bg-purple-50 text-purple-700 rounded-lg text-sm font-bold border border-purple-100">
+                                    Benefícios (Est.): {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(job.benefitsValue || 0)}
+                                </div>
+                                <div className="px-3 py-1.5 bg-slate-100 text-slate-600 rounded-lg text-sm font-bold border border-slate-200">
+                                    Custo Total: {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format((job.salary || 0) + (job.benefitsValue || 0))}
+                                </div>
+                            </div>
+                            {job.benefitsDescription && (
+                                <div className="mt-3 text-sm text-slate-500 bg-slate-50 p-3 rounded-lg border border-slate-100">
+                                    <span className="font-bold text-slate-700 block mb-1">Detalhes dos Benefícios:</span>
+                                    {job.benefitsDescription}
+                                </div>
+                            )}
+
                         </div>
                         <div className="flex items-center gap-4">
                             <div className="px-4 py-2 bg-slate-100 rounded-lg text-slate-600 font-bold flex flex-col items-center">
@@ -323,7 +378,10 @@ const JobDetails = () => {
                                                     <option value="interview_completed">{getStatusLabel('interview_completed')}</option>
                                                     <option value="documents">{getStatusLabel('documents')}</option>
                                                     <option value="hired">{getStatusLabel('hired')}</option>
+                                                    <option value="documents">{getStatusLabel('documents')}</option>
+                                                    <option value="hired">{getStatusLabel('hired')}</option>
                                                     <option value="rejected">{getStatusLabel('rejected')}</option>
+                                                    <option value="suggested">{getStatusLabel('suggested')}</option>
                                                 </select>
                                             </td>
                                             <td className="p-4 text-right relative">
@@ -589,6 +647,94 @@ const JobDetails = () => {
                                 <button onClick={() => setDeleteModalOpen(false)} className="flex-1 py-2.5 bg-slate-100 text-slate-700 font-bold rounded-xl hover:bg-slate-200 transition">Cancelar</button>
                                 <button onClick={handleDelete} className="flex-1 py-2.5 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 transition">Sim, Excluir</button>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Edit Job Modal */}
+            {editJobModalOpen && (
+                <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4 animate-fade-in">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl overflow-hidden flex flex-col max-h-[90vh]">
+                        <div className="bg-slate-50 px-6 py-4 border-b border-slate-100 flex justify-between items-center">
+                            <h3 className="font-bold text-slate-800">Editar Vaga</h3>
+                            <button onClick={() => setEditJobModalOpen(false)} className="text-slate-400 hover:text-slate-600 transition">
+                                <X size={20} />
+                            </button>
+                        </div>
+                        <div className="p-6 overflow-y-auto flex-1 space-y-4">
+                            <div>
+                                <label className="block text-sm font-bold text-slate-700 mb-2">Título da Vaga</label>
+                                <input
+                                    className="w-full p-3 border rounded-xl bg-slate-50 focus:ring-2 focus:ring-indigo-500 outline-none"
+                                    value={jobEditData.title}
+                                    onChange={(e) => setJobEditData({ ...jobEditData, title: e.target.value })}
+                                />
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-bold text-slate-700 mb-2">Área</label>
+                                    <select
+                                        className="w-full p-3 border rounded-xl bg-slate-50 focus:ring-2 focus:ring-indigo-500 outline-none"
+                                        value={jobEditData.area}
+                                        onChange={(e) => setJobEditData({ ...jobEditData, area: e.target.value })}
+                                    >
+                                        <option value="tech">Tech & Dev</option>
+                                        <option value="sales">Vendas & CS</option>
+                                        <option value="finance">Finanças & Contabilidade</option>
+                                        <option value="legal">Jurídico</option>
+                                        <option value="admin">Administrativo / Operacional</option>
+                                        <option value="marketing">Marketing Digital</option>
+                                        <option value="product">Gestão de Produto</option>
+                                        <option value="hr">Recursos Humanos</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-bold text-slate-700 mb-2">Salário Mensal (R$)</label>
+                                    <input
+                                        type="number"
+                                        className="w-full p-3 border rounded-xl bg-slate-50 focus:ring-2 focus:ring-indigo-500 outline-none"
+                                        value={jobEditData.salary}
+                                        onChange={(e) => setJobEditData({ ...jobEditData, salary: e.target.value })}
+                                    />
+                                </div>
+                            </div>
+                            <div className="p-4 bg-indigo-50 rounded-xl border border-indigo-100">
+                                <h3 className="text-sm font-bold text-indigo-900 mb-3">Benefícios</h3>
+                                <div className="grid grid-cols-1 gap-4">
+                                    <div>
+                                        <label className="block text-xs font-bold text-indigo-700 mb-1">Valor Estimado (R$)</label>
+                                        <input
+                                            type="number"
+                                            value={jobEditData.benefitsValue}
+                                            onChange={(e) => setJobEditData({ ...jobEditData, benefitsValue: e.target.value })}
+                                            className="w-full p-2 border border-indigo-200 rounded-lg bg-white focus:ring-2 focus:ring-indigo-500 outline-none text-sm"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-indigo-700 mb-1">Descrição dos Benefícios</label>
+                                        <textarea
+                                            value={jobEditData.benefitsDescription}
+                                            onChange={(e) => setJobEditData({ ...jobEditData, benefitsDescription: e.target.value })}
+                                            className="w-full h-20 p-2 border border-indigo-200 rounded-lg bg-white text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                                        ></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-bold text-slate-700 mb-2">Descrição (Job Description)</label>
+                                <textarea
+                                    className="w-full h-40 p-3 border rounded-xl bg-slate-50 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                                    value={jobEditData.description}
+                                    onChange={(e) => setJobEditData({ ...jobEditData, description: e.target.value })}
+                                ></textarea>
+                            </div>
+                        </div>
+                        <div className="px-6 py-4 border-t border-slate-50 flex justify-end gap-3 bg-white">
+                            <button onClick={() => setEditJobModalOpen(false)} className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">Cancelar</button>
+                            <button onClick={handleSaveJobEdit} className="px-4 py-2 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors flex items-center gap-2">
+                                <Save size={16} /> Salvar Alterações
+                            </button>
                         </div>
                     </div>
                 </div>

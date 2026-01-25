@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { LayoutDashboard, Briefcase, Users, Trophy, Columns2, ChartPie, CircleUser, LogOut, Menu, X } from 'lucide-react';
+import { LayoutDashboard, Briefcase, Users, Trophy, Columns2, ChartPie, CircleUser, LogOut, Menu, X, DollarSign } from 'lucide-react';
 import { Link, useLocation, Outlet } from 'react-router-dom';
 
 const RecruiterLayout = () => {
@@ -17,7 +17,8 @@ const RecruiterLayout = () => {
     const menuItems = [
         { path: '/recruiter/dashboard', label: 'Dashboard', icon: LayoutDashboard },
         { path: '/recruiter/vagas', label: 'Vagas', icon: Briefcase },
-        { path: '/recruiter/candidatos', label: 'Candidatos', icon: Users },
+        { path: '/recruiter/financeiro', label: 'Financeiro', icon: DollarSign }, // Added Financeiro
+        { path: '/recruiter/candidatos', label: 'Banco de Talentos', icon: Users },
         // removing Line
         { path: '/recruiter/comparar', label: 'Comparador', icon: Columns2 },
         { path: '/recruiter/relatorios', label: 'Relatórios', icon: ChartPie },
